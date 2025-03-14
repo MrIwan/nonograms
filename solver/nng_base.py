@@ -1,119 +1,101 @@
 import numpy as np
-from PIL import Image
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 from IPython.display import display, clear_output
+from tabulate import tabulate
+import sys
 
 class NNGBase:
-    def __init__(self, size, row_restrictions, col_restrictions):
+    def __init__(self, size, row_restrictions, col_restrictions, save_history = False):
         self.size = size
         self.row_restrictions = row_restrictions
         self.col_restrictions = col_restrictions
         self.matrix = np.full((size, size), -1, dtype=np.int8)  # -1=unbekannt, 0=leer, 1=gefüllt
+        self.save_history = save_history
         self.history = []
-        
 
     def solved(self) -> bool:
-        """Ultra-optimierte Lösung mit:
-        - Vectorized NumPy Operationen
-        - Early Exit bei Fehlern
-        - Minimalen Speicherzugriffen"""
-        
-        # Schnellcheck 1: Ungelöste Zellen
-        if -1 in self.matrix:
-            return False
-        
-        # Schnellcheck 2: Gesamtzahl der 1er
-        if not self._check_total_sum():
-            return False
+        temp_row_restrictions = []
+        temp_col_restrictions = []
+        for i in range(self.size):
+            temp_row_restrictions.append([])
+            temp_col_restrictions.append([])
+            for j in range(self.size):
+                if self.matrix[i][j] == 1:
+                    if len(temp_row_restrictions[i]) == 0:
+                        temp_row_restrictions[i].append(1)
+                    elif self.matrix[i][j-1] == 1:
+                        temp_row_restrictions[i][len(temp_row_restrictions[i]) - 1] += 1
+                    else:
+                        temp_row_restrictions[i].append(1)
 
-        # Vectorized Block-Berechnung
-        row_blocks = [self._get_blocks(row) for row in self.matrix]
-        if any(r != a for r, a in zip(row_blocks, self.row_restrictions)):
-            return False
+                if self.matrix[j][i] == 1:
+                    if len(temp_col_restrictions[i]) == 0:
+                        temp_col_restrictions[i].append(1)
+                    elif self.matrix[j-1][i] == 1:
+                        temp_col_restrictions[i][len(temp_col_restrictions[i]) - 1] += 1
+                    else:
+                        temp_col_restrictions[i].append(1)
 
-        col_blocks = [self._get_blocks(col) for col in self.matrix.T]
-        return all(c == a for c, a in zip(col_blocks, self.col_restrictions))
-
-    def _check_total_sum(self) -> bool:
-        """Vorab-Check der Gesamtsumme aller Blöcke"""
-        total_row = sum(sum(b) for b in self.row_restrictions)
-        total_col = sum(sum(b) for b in self.col_restrictions)
-        if total_row != total_col:
-            return False
-        return np.count_nonzero(self.matrix == 1) == total_row
-
-    @staticmethod
-    def _get_blocks(arr: np.ndarray) -> list:
-        """Vectorized Block-Erkennung mit NumPy"""
-        padded = np.pad(arr, (1, 1), mode='constant')
-        diffs = np.diff(padded)
-        starts = np.where(diffs > 0)[0]
-        ends = np.where(diffs < 0)[0]
-        return (ends - starts).tolist()
+        print("in solved", temp_col_restrictions, temp_row_restrictions)    
+        if temp_row_restrictions == self.row_restrictions and temp_col_restrictions == self.col_restrictions:
+            return True
+        return False
 
 
     def show(self):
+
         """Konsolenausgabe des aktuellen Zustands"""
         symbols = {
             -1: '?',  # Unbekannt
             0: '□',   # Leer
             1: '■'    # Gefüllt
         }
-        for row in self.matrix:
-            print(' '.join(symbols[cell] for cell in row))
-            
-    def show_img(self, ax=None, **kwargs):
-        """Visualisierung mit Matplotlib"""
-        cmap = plt.cm.binary
-        cmap.set_under('white')
-        cmap.set_over('black')
-        
-        if ax is None:
-            fig, ax = plt.subplots(figsize=(5,5))
-        
-        ax.imshow(np.ma.masked_where(self.matrix == -1, self.matrix), 
-                cmap=cmap, vmin=0, vmax=1, **kwargs)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.grid(True, which='both', color='grey', linewidth=0.5)
-        
-    def save_history_frame(self):
-        """Speichert den aktuellen Zustand in der History"""
-        self.history.append(self.matrix.copy())
 
-    def create_animation(self):
-        """Erstellt eine Animation aus der History"""
-        fig, ax = plt.subplots()
-        frames = []
+        max_len_col_res = max(len(a) for a in self.col_restrictions)
+        col_padded = np.array([[' '] * (max_len_col_res - len(subarray)) + subarray for subarray in self.col_restrictions]).T
 
-        def init():
-            self.show_img(ax)
-            return [ax.images[0]]
+        max_len_row_res = max([len(a) for a in self.row_restrictions])
+        row_padded = np.array([[' '] * (max_len_row_res - len(subarray)) + subarray  for subarray in self.row_restrictions])
 
-        def update(frame):
-            ax.clear()
-            self.matrix = frame
-            self.show_img(ax)
-            return [ax.images[0]]
+        padding = np.full((max_len_col_res, max_len_row_res), ' ')
+        matrix_translated = np.array([[symbols[i] for i in row] for row in self.matrix])
 
-        ani = animation.FuncAnimation(
-            fig, update, frames=self.history,
-            init_func=init, blit=True, interval=500
-        )
-        return ani
+        full_matrix = np.hstack(
+            (np.vstack((padding, row_padded)),
+            np.vstack((col_padded, matrix_translated))))
+
+        print(tabulate(full_matrix))
+
 
     def step(self) -> bool:
         """Muss in Unterklassen implementiert werden"""
         raise NotImplementedError
 
     def solve(self):
+        solved = False
         """Löst das Nonogramm durch wiederholte step-Aufrufe"""
-        self.save_history_frame()
-        while not self.solved:
+        while not solved:
             self.step()
-            self.save_history_frame()
-        return self.matrix
+            solved = self.solved()
+        print("Lösung")
+        self.show()
+        return None
+    
+
+class NNGManual(NNGBase):
+    def __init__(self, size, row_restrictions, col_restrictions, save_history=False):
+        super().__init__(size, row_restrictions, col_restrictions, save_history)
+
+    def step(self) -> bool:
+        self.show()
+        eingabe = input('Bitte gib die Coordinaten von dem Wert ein und den Wert ( -1 = unbekannt, 0 = leer, 1 = makiert)').split(' ')
+        if eingabe[0] == 'q':
+            return True
+        else:
+            try:
+                self.matrix[int(eingabe[0])][int(eingabe[1])] = int(eingabe[2])
+            except:
+                print('Falsche eingabe!')
+        return self.solved()
 
 
 class NNGreedy(NNGBase):
