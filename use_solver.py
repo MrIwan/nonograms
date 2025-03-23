@@ -1,7 +1,5 @@
 from solver import create_nng, nng_base
 
-SIZE = 5
-
 row_res, col_res = create_nng.create_nng_from_image(
     path = 'ressources/Eichhörnchen.jpg',
     rows=2,

@@ -1,7 +1,7 @@
 import numpy as np
 from tabulate import tabulate
 import time
-from create_nng import create_restrictions_from_array
+from .create_nng import create_restrictions_from_array
 
 class NNGBase:
     def __init__(self, row_restrictions, col_restrictions, save_history = False):
