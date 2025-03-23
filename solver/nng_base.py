@@ -1,13 +1,15 @@
 import numpy as np
 from tabulate import tabulate
 import time
+from create_nng import create_restrictions_from_array
 
 class NNGBase:
-    def __init__(self, size, row_restrictions, col_restrictions, save_history = False):
-        self.size = size
+    def __init__(self, row_restrictions, col_restrictions, save_history = False):
+        self.rows = len(row_restrictions)
+        self.colums = len(col_restrictions)
         self.row_restrictions = row_restrictions
         self.col_restrictions = col_restrictions
-        self.matrix = np.full((size, size), -1, dtype=np.int8)  # -1=unbekannt, 0=leer, 1=gefüllt
+        self.matrix = np.full((self.rows, self.colums), -1, dtype=np.int8)  # -1=unbekannt, 0=leer, 1=gefüllt
         self.save_history = save_history
         self.history = []
         self.start_time = 0
@@ -17,29 +19,7 @@ class NNGBase:
 
         if temp_matrix.all() == None:
             temp_matrix = self.matrix
-
-        temp_row_restrictions = []
-        temp_col_restrictions = []
-        for i in range(self.size):
-            temp_row_restrictions.append([])
-            temp_col_restrictions.append([])
-            for j in range(self.size):
-                if temp_matrix[i][j] == 1:
-                    if len(temp_row_restrictions[i]) == 0:
-                        temp_row_restrictions[i].append(1)
-                    elif temp_matrix[i][j-1] == 1:
-                        temp_row_restrictions[i][len(temp_row_restrictions[i]) - 1] += 1
-                    else:
-                        temp_row_restrictions[i].append(1)
-
-                if temp_matrix[j][i] == 1:
-                    if len(temp_col_restrictions[i]) == 0:
-                        temp_col_restrictions[i].append(1)
-                    elif temp_matrix[j-1][i] == 1:
-                        temp_col_restrictions[i][len(temp_col_restrictions[i]) - 1] += 1
-                    else:
-                        temp_col_restrictions[i].append(1)
-
+        temp_row_restrictions, temp_col_restrictions = create_restrictions_from_array(temp_matrix)
         if temp_row_restrictions == self.row_restrictions and temp_col_restrictions == self.col_restrictions:
             return True
         return False
@@ -149,33 +129,18 @@ class NNGStupidRec(NNGBase):
 
 class NNGreedy(NNGBase):
     """Greedy-Algorithmus Implementierung"""
-    def __init__(self, size):
-        super().__init__(size)
+    def __init__(self, size, row_restrictions, col_restrictions, save_history=False):
+        super().__init__(size, row_restrictions, col_restrictions, save_history)
         
-    def step(self) -> bool:
-        # Implementiere hier deine Greedy-Logik
-        # Beispiel: Fülle offensichtliche Zellen basierend auf Beschränkungen
-        old_matrix = self.matrix.copy()
-        
-        # Platzhalter-Logik
-        changed = False
-        for i in range(self.size):
-            # Hier würde die eigentliche Greedy-Logik stehen
-            if np.all(self.matrix[i] == -1):
-                self.matrix[i] = 0
-                changed = True
-                
-        self.solved = np.all(self.matrix != -1)
-        return not np.array_equal(old_matrix, self.matrix)
+    def solve(self) -> bool:
+        return NotImplementedError
+    
 
-
-class NNGBacktracking(NNGBase):
-    """Backtracking Implementierung"""
-    def __init__(self, size):
-        super().__init__(size)
+class NNGSat(NNGBase):
+    """SAT-Implementierung"""
+    def __init__(self, size, row_restrictions, col_restrictions, save_history=False):
+        super().__init__(size, row_restrictions, col_restrictions, save_history)
         
-    def step(self) -> bool:
-        # Implementiere Backtracking-Logik
-        # (Für Backtracking wäre eine rekursive Implementierung typischer,
-        # aber hier als iterative Version)
-        pass
+    def solve(self) -> bool:
+        return NotImplementedError
+
