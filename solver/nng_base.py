@@ -69,8 +69,8 @@ class NNGBase:
     
 
 class NNGManual(NNGBase):
-    def __init__(self, size, row_restrictions, col_restrictions, save_history=False):
-        super().__init__(size, row_restrictions, col_restrictions, save_history)
+    def __init__(self, row_restrictions, col_restrictions, save_history=False):
+        super().__init__(row_restrictions, col_restrictions, save_history)
 
     def _step(self) -> bool:
         self.show()
@@ -96,8 +96,8 @@ class NNGManual(NNGBase):
         return None
     
 class NNGStupidRec(NNGBase):
-    def __init__(self, size, row_restrictions, col_restrictions, save_history=False):
-        super().__init__(size, row_restrictions, col_restrictions, save_history)
+    def __init__(self, row_restrictions, col_restrictions, save_history=False):
+        super().__init__(row_restrictions, col_restrictions, save_history)
 
     def _rec_step(self, temp_matrix: np.ndarray, i, j):
         self.add_history_frame(temp_matrix)
@@ -129,8 +129,8 @@ class NNGStupidRec(NNGBase):
 
 class NNGreedy(NNGBase):
     """Greedy-Algorithmus Implementierung"""
-    def __init__(self, size, row_restrictions, col_restrictions, save_history=False):
-        super().__init__(size, row_restrictions, col_restrictions, save_history)
+    def __init__(self, row_restrictions, col_restrictions, save_history=False):
+        super().__init__(row_restrictions, col_restrictions, save_history)
         
     def solve(self) -> bool:
         return NotImplementedError
@@ -138,8 +138,8 @@ class NNGreedy(NNGBase):
 
 class NNGSat(NNGBase):
     """SAT-Implementierung"""
-    def __init__(self, size, row_restrictions, col_restrictions, save_history=False):
-        super().__init__(size, row_restrictions, col_restrictions, save_history)
+    def __init__(self, row_restrictions, col_restrictions, save_history=False):
+        super().__init__(row_restrictions, col_restrictions, save_history)
         
     def solve(self) -> bool:
         return NotImplementedError

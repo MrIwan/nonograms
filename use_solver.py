@@ -10,10 +10,8 @@ row_res, col_res = create_nng.create_nng_from_image(
 print(f'row_res = {len(row_res)} ')
 print(f'col_res = {len(col_res)}')
 
-'''nng = nng_base.NNGStupidRec(
-    size=SIZE,
+nng = nng_base.NNGStupidRec(
     row_restrictions=row_res,
     col_restrictions=col_res,
     save_history=True)
-
-nng.solve()'''
+nng.solve()
