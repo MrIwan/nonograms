@@ -86,7 +86,6 @@ class NNGManual(NNGBase):
     
     def solve(self):
         solved = False
-        """Muss in den Unterklassen implementiert werden"""
         while not solved:
             self._step()
             self.add_history_frame()
@@ -108,10 +107,10 @@ class NNGStupidRec(NNGBase):
         for x in [0, 1]:
             next_i = i + 1
             next_j = j
-            if next_i >= self.size:
+            if next_i >= self.rows:
                 next_i = 0
                 next_j = j + 1
-            if next_j < self.size:
+            if next_j < self.colums:
                 new_matrix = temp_matrix.copy()
                 new_matrix[next_i][next_j] = x
                 if self._rec_step(new_matrix, next_i, next_j):
