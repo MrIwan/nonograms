@@ -16,7 +16,6 @@ class NNGBase:
         self.cpu_time = 0
 
     def solved(self, temp_matrix = None) -> bool:
-
         if temp_matrix.all() == None:
             temp_matrix = self.matrix
         temp_row_restrictions, temp_col_restrictions = create_restrictions_from_array(temp_matrix)

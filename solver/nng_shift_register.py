@@ -31,11 +31,6 @@ class NNGShitRegister(NNGBase):
     
     def _create_matrix(self):
         temp_matrix = np.zeros((len(self.row_restrictions), len(self.col_restrictions)), dtype=int)
-        print(
-            f'len(self.row_restrictions) = {len(self.row_restrictions)}\n'
-            f'len(self.col_restrictions) = {len(self.col_restrictions)}\n'
-        )
-        print(self.blocks)
         for b in self.blocks:
             for i in range(b.length):
                 temp_matrix[b.row][b.start_pos + i] = 1
@@ -43,12 +38,11 @@ class NNGShitRegister(NNGBase):
     
     def _shift_is_possible(self) -> bool:
         # check if block would be pushed out of the board
-        # print(f'shift_is_possible: self.blocks[self.active_block].end_pos() = {self.blocks[self.active_block].end_pos()}')
-        if self.blocks[self.active_block].end_pos() > len(self.row_restrictions):
+        if self.blocks[self.active_block].end_pos() >= len(self.row_restrictions):
             return False
         # check if next Block ist blocking the current Block
-        if self.active_block < len(self.blocks) - 2:
-            if self.blocks[self.active_block].row ==  self.blocks[self.active_block + 1].row:
+        if self.active_block < len(self.blocks) - 1:
+            if self.blocks[self.active_block].row == self.blocks[self.active_block + 1].row:
                 if self.blocks[self.active_block].end_pos() + 1 >= self.blocks[self.active_block + 1].start_pos:
                     return False
         return True
@@ -76,9 +70,13 @@ class NNGShitRegister(NNGBase):
             self.active_block = len(self.blocks) - 1
     
     def solve(self):
+        self.start_timer()
         solved = False
         while not solved:
             if self.solved(self._create_matrix()):
                 solved = True
+                self.matrix = self._create_matrix()
+                self.stop_timer()
+                self.show()
             else:
                 self._shift()

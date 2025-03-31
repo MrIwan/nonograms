@@ -59,9 +59,12 @@ def create_nng_from_image(path: str, rows: int, colums: int, treshhold: int = 12
     if show_image:        
         imgplot = plt.imshow(array, cmap='binary')
 
+
+
     # create restrictions array
     row_restrictions, col_restrictions = create_restrictions_from_array(array)
 
+    print(array)
     return row_restrictions, col_restrictions
 
     
