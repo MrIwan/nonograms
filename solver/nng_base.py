@@ -123,7 +123,7 @@ class NNGStupidRec(NNGBase):
         self._rec_step(self.matrix.copy(), -1, 0)
         self.stop_timer()
         self.show()
-        
+   
 
 
 class NNGreedy(NNGBase):
